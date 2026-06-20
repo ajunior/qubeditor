@@ -25,7 +25,7 @@ jobs:
         run: |
           mkdir -p docs
           cp -r qub/docs/. docs/
-          cp qub/resources/docs/help.html docs/help.html
+          [ -f qub/resources/docs/help.html ] && cp qub/resources/docs/help.html docs/help.html || true
           echo "qubeditor.com" > docs/CNAME
 
       - name: Commit and push
