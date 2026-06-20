@@ -2,8 +2,8 @@ name: Sync from Codeberg
 
 on:
   schedule:
-    - cron: '0 6 * * *'   # daily at 6 AM UTC
-  workflow_dispatch:      # also triggerable manually
+    - cron: "0 6 * * *"   # daily at 6 AM UTC
+  workflow_dispatch:        # also triggerable manually
 
 jobs:
   sync:
@@ -12,14 +12,27 @@ jobs:
       contents: write
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Fetch docs from Codeberg
         run: |
           git clone --depth=1 --filter=blob:none --sparse \
             https://codeberg.org/ajunior/qub.git qub
-          cd qub && git sparse-checkout set docs
+          cd qub && git sparse-checkout set docs resources/docs
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./qub/docs
+      - name: Copy docs
+        run: |
+          mkdir -p docs
+          cp -r qub/docs/. docs/
+          cp qub/resources/docs/help.html docs/help.html
+          echo "qubeditor.com" > docs/CNAME
+
+      - name: Commit and push
+        run: |
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git config user.name "github-actions[bot]"
+          git add docs/
+          git diff --staged --quiet && echo "No changes to commit" && exit 0
+          git commit -m "sync: update docs from Codeberg"
+          git push
