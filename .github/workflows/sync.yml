@@ -1,0 +1,25 @@
+name: Sync from Codeberg
+
+on:
+  schedule:
+    - cron: '0 6 * * *'   # daily at 6 AM UTC
+  workflow_dispatch:      # also triggerable manually
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Fetch docs from Codeberg
+        run: |
+          git clone --depth=1 --filter=blob:none --sparse \
+            https://codeberg.org/ajunior/qub.git qub
+          cd qub && git sparse-checkout set docs
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./qub/docs
